@@ -81,7 +81,6 @@ public class ContentManagerImp extends ContentManager {
     private DownloadProvider provider;
     private File itemsDir;
     private boolean started;
-    private boolean autoResumeItemsInProgress = true;
 
     private ContentManagerImp(Context context) {
         this.context = context.getApplicationContext();
@@ -133,6 +132,14 @@ public class ContentManagerImp extends ContentManager {
     }
 
     @Override
+    public void resumeInterruptedDownloads() {
+        List < DownloadItem > downloads = getDownloads(DownloadState.IN_PROGRESS);
+        for (DownloadItem download : downloads) {
+            download.startDownload();
+        }
+    }
+
+    @Override
     public void start(final OnStartedListener onStartedListener) {
 
         if (started) {
@@ -142,24 +149,7 @@ public class ContentManagerImp extends ContentManager {
         provider = new DefaultProviderProxy(context);
         provider.setMaxConcurrentDownloads(maxConcurrentDownloads);
         provider.setDownloadStateListener(downloadStateRelay);
-        provider.start(new OnStartedListener() {
-                            @Override
-                            public void onStarted() {
-                                
-                                if (autoResumeItemsInProgress) {
-                                    // Resume all downloads that were in progress on stop.
-                                    List < DownloadItem > downloads = getDownloads(DownloadState.IN_PROGRESS);
-                                    for (DownloadItem download : downloads) {
-                                        download.startDownload();
-                                    }
-                                }
-                                
-                                if (onStartedListener != null) {
-                                    onStartedListener.onStarted();
-                                }
-                            }
-                        });
-
+        provider.start(onStartedListener);
 
         started = true;
     }
@@ -236,11 +226,6 @@ public class ContentManagerImp extends ContentManager {
     @Override
     public File getLocalFile(String itemId) {
         return provider.getLocalFile(itemId);
-    }
-
-    @Override
-    public void setAutoResumeItemsInProgress(boolean autoStartItemsInProgress) {
-        this.autoResumeItemsInProgress = autoStartItemsInProgress;
     }
 }
 

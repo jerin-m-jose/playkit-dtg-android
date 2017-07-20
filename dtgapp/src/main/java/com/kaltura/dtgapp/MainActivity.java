@@ -243,11 +243,20 @@ public class MainActivity extends AppCompatActivity {
                     trackSelector.setSelectedTracks(DownloadItem.TrackType.AUDIO, selection);
                 }
 
-                // Select lowest-resolution video
+                // Select lowest-bitrate video
                 List<DownloadItem.Track> videoTracks = trackSelector.getAvailableTracks(DownloadItem.TrackType.VIDEO);
+
+                Log.d(TAG, "videoTracks: " + videoTracks);
+
                 DownloadItem.Track minVideo = Collections.min(videoTracks, DownloadItem.Track.bitrateComparator);
                 trackSelector.setSelectedTracks(DownloadItem.TrackType.VIDEO, Collections.singletonList(minVideo));
 
+                
+                // Find highest video
+                DownloadItem.Track highestVideo = Collections.max(videoTracks, DownloadItem.Track.heightComparator);
+                Log.d(TAG, "" + highestVideo);
+                
+                
             }
         });
 
@@ -324,6 +333,8 @@ public class MainActivity extends AppCompatActivity {
                 SpinnerItem selected = getSelectedItem();
                 DownloadItem item = contentManager.findItem(selected.itemId);
                 uiLog(item);
+                uiLog(contentManager.getPlaybackURL(selected.itemId));
+                uiLog(contentManager.getLocalFile(selected.itemId));
             }
         });
 
@@ -359,6 +370,13 @@ public class MainActivity extends AppCompatActivity {
                 if (item != null) {
                     item.pauseDownload();
                 }
+            }
+        });
+
+        setButtonAction(R.id.button_resume_interrupted, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                contentManager.resumeInterruptedDownloads();
             }
         });
 
