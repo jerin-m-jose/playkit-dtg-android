@@ -29,8 +29,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -260,13 +258,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-//        contentManager.setAutoResumeItemsInProgress(false);
         contentManager.start(new ContentManager.OnStartedListener() {
             @Override
             public void onStarted() {
                 Log.d(TAG, "Service started");
+                contentManager.resumeInterruptedDownloads();
             }
         });
+        
 
         setButtonAction(R.id.totalStorageSize, new View.OnClickListener() {
             @Override
@@ -282,33 +281,6 @@ public class MainActivity extends AppCompatActivity {
         itemSpinner.setAdapter(itemAdapter);
 
         loadTestItems(itemAdapter);
-
-        setButtonAction(R.id.button_new_item, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                SpinnerItem selected = getSelectedItem();
-                DownloadItem item = contentManager.findItem(selected.itemId);
-                if (item == null) {
-                    item = contentManager.createItem(selected.itemId, selected.url);
-                    uiLog("Item created");
-                    uiLog(item);
-                } else {
-                    uiLog("Item already exists");
-                }
-            }
-        });
-
-        setButtonAction(R.id.button_load_info, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final DownloadItem item = contentManager.findItem(getSelectedItem().itemId);
-                if (item == null) {
-                    uiLog("Item not found");
-                } else {
-                    item.loadMetadata();
-                }
-            }
-        });
         
         setButtonAction(R.id.button_add_and_load, new View.OnClickListener() {
             @Override
@@ -372,82 +344,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
-        setButtonAction(R.id.button_resume_interrupted, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                contentManager.resumeInterruptedDownloads();
-            }
-        });
-
-        setButtonAction(R.id.button_pause_all, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                contentManager.pauseDownloads();
-            }
-        });
-
-        setButtonAction(R.id.button_resume_all, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                contentManager.resumeDownloads();
-            }
-        });
-
-        setButtonAction(R.id.button_write_app_data, new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                SpinnerItem selected = getSelectedItem();
-
-                DownloadItem item = contentManager.findItem(selected.itemId);
-
-                JSONObject td = getTestData();
-
-                // As file
-                File appDataDir = contentManager.getAppDataDir(item.getItemId());
-                String result;
-                try {
-                    FileWriter writer = new FileWriter(new File(appDataDir, "date.txt"));
-                    String data = td.toString();
-                    writer.write(data);
-                    writer.close();
-                    result = String.format("Data written to AppData(%s): '%s'", selected.itemId, data);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    result = e.toString();
-                }
-                uiLog(result);
-            }
-        });
-
-        setButtonAction(R.id.button_read_app_data, new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-
-                SpinnerItem selected;
-                selected = getSelectedItem();
-                JSONObject td = getTestData();
-
-                File appDataDir = contentManager.getAppDataDir(selected.itemId);
-
-                String result;
-                try {
-                    FileReader reader = new FileReader(new File(appDataDir, "date.txt"));
-                    char[] buffer = new char[1024];
-                    int len = reader.read(buffer);
-                    reader.close();
-                    assert new String(buffer).equals(td.toString());
-                    result = String.format("Data read from AppData(%s): '%s'", selected.itemId, new String(buffer, 0, len));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    result = e.toString();
-                }
-                uiLog(result);
-            }
-        });
-
+        
         setButtonAction(R.id.button_list_downloads_new, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -506,25 +403,6 @@ public class MainActivity extends AppCompatActivity {
                 log.setText("");
             }
         });
-
-        setButtonAction(R.id.button_do_action, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                EditText editText = (EditText) findViewById(R.id.custom_action);
-                String action = editText.getText().toString();
-                doCustomAction(action);
-            }
-        });
-    }
-
-
-    private void doCustomAction(String action) {
-        String itemId = getSelectedItem().itemId;
-        DownloadItem item = ContentManager.getInstance(this).findItem(itemId);
-
-        DownloadItem.TrackSelector trackSelector = item.getTrackSelector();
-        List<DownloadItem.Track> downloadedTracks = trackSelector.getDownloadedTracks(DownloadItem.TrackType.AUDIO);
-        Log.d(TAG, "downloadedTracks=" + downloadedTracks);
     }
 
     @Override

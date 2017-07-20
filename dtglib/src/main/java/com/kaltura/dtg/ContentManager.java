@@ -51,16 +51,6 @@ public abstract class ContentManager {
     public abstract void resumeInterruptedDownloads();
     
     /**
-     * Pause all downloads (set their state to PAUSE and stop downloading).
-     */
-    public abstract void pauseDownloads();
-
-    /**
-     * Resume all PAUSED downloads.
-     */
-    public abstract void resumeDownloads();
-
-    /**
      * Find and return an item.
      *
      * @return An item identified by itemId, or null if not found.

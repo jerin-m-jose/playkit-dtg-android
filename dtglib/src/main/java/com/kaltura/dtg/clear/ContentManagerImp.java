@@ -155,22 +155,6 @@ public class ContentManagerImp extends ContentManager {
     }
 
     @Override
-    public void pauseDownloads() {
-        List<DownloadItem> downloads = getDownloads(DownloadState.IN_PROGRESS);
-        for (DownloadItem item : downloads) {
-            provider.pauseDownload(item);
-        }
-    }
-
-    @Override
-    public void resumeDownloads() {
-        List<DownloadItem> downloads = getDownloads(DownloadState.PAUSED);
-        for (DownloadItem item : downloads) {
-            provider.resumeDownload(item);
-        }
-    }
-
-    @Override
     public DownloadItem findItem(String itemId) {
         return provider.findItem(itemId);
     }
