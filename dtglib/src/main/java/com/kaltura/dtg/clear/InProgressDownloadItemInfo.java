@@ -8,10 +8,13 @@ public class InProgressDownloadItemInfo {
 
     private long totalBytes;
     private List<String> completedDownloadItemTasks;
+    private int  totalChunkItem;
+    private DefaultDownloadItem defaultDownloadItem;
 
-    public InProgressDownloadItemInfo() {
+    public InProgressDownloadItemInfo(int totalChunkItem) {
+        this.totalChunkItem = totalChunkItem;
         this.totalBytes = 0;
-        completedDownloadItemTasks = new ArrayList<>();
+        this.completedDownloadItemTasks = new ArrayList<>();
     }
 
     public long getTotalBytes() {
@@ -24,5 +27,25 @@ public class InProgressDownloadItemInfo {
 
     public List<String> getCompletedDownloadItemTasks() {
         return completedDownloadItemTasks;
+    }
+
+    public void setCompletedDownloadItemTasks(List<String> completedDownloadItemTasks) {
+        this.completedDownloadItemTasks = completedDownloadItemTasks;
+    }
+
+    public int getTotalChunkItem() {
+        return totalChunkItem;
+    }
+
+    public void setTotalChunkItem(Integer totalChunkItem) {
+        this.totalChunkItem = totalChunkItem;
+    }
+
+    public DefaultDownloadItem getDefaultDownloadItem() {
+        return defaultDownloadItem;
+    }
+
+    public void setDefaultDownloadItem(DefaultDownloadItem defaultDownloadItem) {
+        this.defaultDownloadItem = defaultDownloadItem;
     }
 }
