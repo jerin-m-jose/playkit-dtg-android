@@ -8,11 +8,11 @@ public class InProgressDownloadItemInfo {
 
     private long totalBytes;
     private List<String> completedDownloadItemTasks;
-    private int  totalChunkItem;
+    private int numOfChunksInItem;
     private DefaultDownloadItem defaultDownloadItem;
 
-    public InProgressDownloadItemInfo(int totalChunkItem) {
-        this.totalChunkItem = totalChunkItem;
+    public InProgressDownloadItemInfo(int numOfChunksInItem) {
+        this.numOfChunksInItem = numOfChunksInItem;
         this.totalBytes = 0;
         this.completedDownloadItemTasks = new ArrayList<>();
     }
@@ -33,12 +33,12 @@ public class InProgressDownloadItemInfo {
         this.completedDownloadItemTasks = completedDownloadItemTasks;
     }
 
-    public int getTotalChunkItem() {
-        return totalChunkItem;
+    public int getNumOfChunksInItem() {
+        return numOfChunksInItem;
     }
 
-    public void setTotalChunkItem(Integer totalChunkItem) {
-        this.totalChunkItem = totalChunkItem;
+    public void setNumOfChunksInItem(Integer numOfChunksInItem) {
+        this.numOfChunksInItem = numOfChunksInItem;
     }
 
     public DefaultDownloadItem getDefaultDownloadItem() {

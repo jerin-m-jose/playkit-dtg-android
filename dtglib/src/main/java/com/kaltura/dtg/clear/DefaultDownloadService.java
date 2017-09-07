@@ -101,7 +101,7 @@ public class DefaultDownloadService extends Service {
         if (newState == DownloadTask.State.COMPLETED) {
             //database.markTaskAsComplete(task);
             currInProgressDownloadItemInfo.getCompletedDownloadItemTasks().add(task.taskId);
-            pendingCount = currInProgressDownloadItemInfo.getTotalChunkItem() - currInProgressDownloadItemInfo.getCompletedDownloadItemTasks().size();
+            pendingCount = currInProgressDownloadItemInfo.getNumOfChunksInItem() - currInProgressDownloadItemInfo.getCompletedDownloadItemTasks().size();
             Log.i(TAG, "Pending tasks for item: " + pendingCount);
         }
 
@@ -114,7 +114,6 @@ public class DefaultDownloadService extends Service {
             item.setState(DownloadState.FAILED);
             database.updateItemState(itemId, DownloadState.FAILED);
             futureMap.cancelItem(itemId);
-            inProgressDownloadItemInfoMap.get(itemId).getCompletedDownloadItemTasks().clear();
             listenerHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -139,8 +138,7 @@ public class DefaultDownloadService extends Service {
 
             item.setState(DownloadState.COMPLETED);
             database.updateItemState(itemId, DownloadState.COMPLETED);
-            inProgressDownloadItemInfoMap.get(itemId).getCompletedDownloadItemTasks().clear();
-            inProgressDownloadItemInfoMap.remove(itemId);
+            removeItemFromMap(itemId);
 
             listenerHandler.post(new Runnable() {
                 @Override
@@ -155,6 +153,13 @@ public class DefaultDownloadService extends Service {
                     downloadStateListener.onProgressChange(item, totalBytes);
                 }
             });
+        }
+    }
+
+    private void removeItemFromMap(String itemId) {
+        if (inProgressDownloadItemInfoMap.containsKey(itemId)) {
+            inProgressDownloadItemInfoMap.get(itemId).getCompletedDownloadItemTasks().clear();
+            inProgressDownloadItemInfoMap.remove(itemId);
         }
     }
 
@@ -525,10 +530,12 @@ public class DefaultDownloadService extends Service {
         // pauseDownload takes time to interrupt all downloads, and the downloads report their
         // progress. Keep a list of the items that were removed in this session and ignore their
         // progress.
-        removedItems.add(item.getItemId());
+        String itemId  = item.getItemId();
+        removedItems.add(itemId);
+        removeItemFromMap(itemId);
 
 
-        deleteItemFiles(item.getItemId());
+        deleteItemFiles(itemId);
         database.removeItemFromDB(item);
     }
 
