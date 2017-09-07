@@ -91,10 +91,6 @@ public class DefaultDownloadService extends Service {
             throw new IllegalStateException("No Item fonud for itemId = " + itemId);
         }
 
-        if (!defaultDtgItemExistInMap) {
-            inProgressDownloadItemInfoMap.get(itemId).setDefaultDownloadItem(item);
-        }
-
         InProgressDownloadItemInfo currInProgressDownloadItemInfo = currInProgressDownloadItemInfo = inProgressDownloadItemInfoMap.get(itemId);
 
         int pendingCount = -1;
@@ -464,7 +460,7 @@ public class DefaultDownloadService extends Service {
         ArrayList<DownloadTask> chunksToDownload = database.readPendingDownloadTasksFromDB(itemId);
         boolean itemInMap = inProgressDownloadItemInfoMap.containsKey(itemId);
         if (!itemInMap) {
-            InProgressDownloadItemInfo inProgressDownloadItemInfo = new InProgressDownloadItemInfo(chunksToDownload.size());
+            InProgressDownloadItemInfo inProgressDownloadItemInfo = new InProgressDownloadItemInfo(item, chunksToDownload.size());
             inProgressDownloadItemInfoMap.put(itemId, inProgressDownloadItemInfo);
         }
         if (chunksToDownload.isEmpty()) {
