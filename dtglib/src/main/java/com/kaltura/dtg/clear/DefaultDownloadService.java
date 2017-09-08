@@ -25,7 +25,6 @@ import java.net.HttpRetryException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -33,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
@@ -54,7 +54,7 @@ public class DefaultDownloadService extends Service {
 
     private Set<String> removedItems = new HashSet<>();
 
-    private Map<String, InProgressDownloadItemInfo> inProgressDownloadItemInfoMap = new HashMap<>();
+    private Map<String, InProgressDownloadItemInfo> inProgressDownloadItemInfoMap = new ConcurrentHashMap<>();
 
 
     private final DownloadTask.Listener mDownloadTaskListener = new DownloadTask.Listener() {
@@ -84,21 +84,21 @@ public class DefaultDownloadService extends Service {
             throw new IllegalStateException("Service not started correvtly inProgressDownloadItemInfoMap missing item " + itemId);
         }
         boolean defaultDtgItemExistInMap = inProgressDownloadItemInfoMap.get(itemId).getDefaultDownloadItem() != null;
-        final DefaultDownloadItem item = (!defaultDtgItemExistInMap) ? findItemImpl(itemId): inProgressDownloadItemInfoMap.get(itemId).getDefaultDownloadItem();
+        final DefaultDownloadItem item   = inProgressDownloadItemInfoMap.get(itemId).getDefaultDownloadItem();
 
         if (item == null) {
             Log.e(TAG, "Can't find item by id: " + itemId + "; taskId: " + task.taskId);
             throw new IllegalStateException("No Item fonud for itemId = " + itemId);
         }
 
-        InProgressDownloadItemInfo currInProgressDownloadItemInfo = currInProgressDownloadItemInfo = inProgressDownloadItemInfoMap.get(itemId);
+        InProgressDownloadItemInfo currInProgressDownloadItemInfo = inProgressDownloadItemInfoMap.get(itemId);
 
         int pendingCount = -1;
         if (newState == DownloadTask.State.COMPLETED) {
             //database.markTaskAsComplete(task);
-            currInProgressDownloadItemInfo.getCompletedDownloadItemTasks().add(task.taskId);
-            pendingCount = currInProgressDownloadItemInfo.getNumOfChunksInItem() - currInProgressDownloadItemInfo.getCompletedDownloadItemTasks().size();
-            Log.i(TAG, "Pending tasks for item: " + pendingCount);
+            currInProgressDownloadItemInfo.addCompletedTaskIdToList(task.taskId);
+            pendingCount = currInProgressDownloadItemInfo.getPendingCount();;
+            Log.i(TAG, "Pending tasks for item: " +itemId + " = " + pendingCount);
         }
 
         if (newState == DownloadTask.State.ERROR) {
@@ -118,13 +118,12 @@ public class DefaultDownloadService extends Service {
             });
             return;
         }
-        final long totalBytes1 = item.incDownloadBytes(newBytes);
-        //Log.i(TAG, "Pending tasks totalBytes1: " + totalBytes1);
 
-
-        //Log.i(TAG, "Pending tasks new bytes: " + newBytes);
-        final long totalBytes = (itemInMap) ? currInProgressDownloadItemInfo.getTotalBytes() + newBytes : newBytes;
+        //need to update Item with new value
+        final long totalBytes = item.incDownloadBytes(newBytes);
         //Log.i(TAG, "Pending tasks totalBytes: " + totalBytes);
+
+        //final long totalBytes = currInProgressDownloadItemInfo.getTotalBytes() + newBytes;
         currInProgressDownloadItemInfo.setTotalBytes(totalBytes);
         //updateItemInfoInDB(item, Database.COL_ITEM_DOWNLOADED_SIZE);
 

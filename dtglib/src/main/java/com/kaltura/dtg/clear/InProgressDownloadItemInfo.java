@@ -26,6 +26,10 @@ public class InProgressDownloadItemInfo {
         this.totalBytes = totalBytes;
     }
 
+    public synchronized void addCompletedTaskIdToList(String taskId) {
+        this.completedDownloadItemTasks.add(taskId);
+    }
+
     public synchronized List<String> getCompletedDownloadItemTasks() {
         return completedDownloadItemTasks;
     }
@@ -36,5 +40,9 @@ public class InProgressDownloadItemInfo {
 
     public DefaultDownloadItem getDefaultDownloadItem() {
         return defaultDownloadItem;
+    }
+
+    public synchronized int getPendingCount() {
+        return numOfChunksInItem - completedDownloadItemTasks.size();
     }
 }
