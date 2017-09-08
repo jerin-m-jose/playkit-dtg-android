@@ -94,8 +94,8 @@ public class DefaultDownloadService extends Service {
         if (!itemInMap) {
             throw new IllegalStateException("Service not started correctly inProgressDownloadItemInfoMap missing item " + itemId);
         }
-        boolean defaultDtgItemExistInMap = inProgressDownloadItemInfoMap.get(itemId).getDefaultDownloadItem() != null;
-        final DefaultDownloadItem item   = inProgressDownloadItemInfoMap.get(itemId).getDefaultDownloadItem();
+
+        final DefaultDownloadItem item = inProgressDownloadItemInfoMap.get(itemId).getDefaultDownloadItem();
 
         if (item == null) {
             Log.e(TAG, "Can't find item by id: " + itemId + " taskId: " + task.taskId);
@@ -503,7 +503,7 @@ public class DefaultDownloadService extends Service {
         return item.getState();
     }
 
-    public void pauseDownload(final DefaultDownloadItem item) {
+    public synchronized void pauseDownload(final DefaultDownloadItem item) {
         assertStarted();
 
         if (item != null) {
@@ -525,7 +525,7 @@ public class DefaultDownloadService extends Service {
         }
     }
 
-    public void resumeDownload(DefaultDownloadItem item) {
+    public synchronized void resumeDownload(DefaultDownloadItem item) {
         assertStarted();
 
         // resume should be considered as download start
