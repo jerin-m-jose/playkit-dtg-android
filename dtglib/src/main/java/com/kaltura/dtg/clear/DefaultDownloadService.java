@@ -92,7 +92,7 @@ public class DefaultDownloadService extends Service {
 
         boolean itemInMap = inProgressDownloadItemInfoMap.containsKey(itemId);
         if (!itemInMap) {
-            throw new IllegalStateException("Service not started correvtly inProgressDownloadItemInfoMap missing item " + itemId);
+            throw new IllegalStateException("Service not started correctly inProgressDownloadItemInfoMap missing item " + itemId);
         }
         boolean defaultDtgItemExistInMap = inProgressDownloadItemInfoMap.get(itemId).getDefaultDownloadItem() != null;
         final DefaultDownloadItem item   = inProgressDownloadItemInfoMap.get(itemId).getDefaultDownloadItem();
@@ -165,7 +165,7 @@ public class DefaultDownloadService extends Service {
                 @Override
                 public void run() {
                     if (shouldSendProgress) {
-                        Log.i(TAG, "Pending tasks Sending progress");
+                        //Log.i(TAG, "Pending tasks Sending progress");
                         downloadStateListener.onProgressChange(item, totalBytes);
                     }
                 }
@@ -454,7 +454,7 @@ public class DefaultDownloadService extends Service {
 
     }
 
-    public DownloadState startDownload(final String itemId) {
+    public synchronized DownloadState startDownload(final String itemId) {
         assertStarted();
         if (TextUtils.isEmpty(itemId)) {
             throw new IllegalStateException("Can't download empty itemId");
