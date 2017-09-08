@@ -8,6 +8,7 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
@@ -36,6 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.ThreadFactory;
 
 public class DefaultDownloadService extends Service {
 
@@ -53,6 +55,15 @@ public class DefaultDownloadService extends Service {
     private ContentManager.Settings settings;
 
     private Set<String> removedItems = new HashSet<>();
+    private ThreadFactory executorThreadFactory = new ThreadFactory() {
+        ThreadFactory inner = Executors.defaultThreadFactory();
+        @Override
+        public Thread newThread(@NonNull Runnable r) {
+            Thread thread = inner.newThread(r);
+            thread.setPriority(2);
+            return thread;
+        }
+    };
 
     private Map<String, InProgressDownloadItemInfo> inProgressDownloadItemInfoMap = new ConcurrentHashMap<>();
 
@@ -291,8 +302,9 @@ public class DefaultDownloadService extends Service {
         database = new Database(dbFile, this);
 
         startHandlerThreads();
+        mExecutor = Executors.newFixedThreadPool(settings.maxConcurrentDownloads, executorThreadFactory);
 
-        mExecutor = Executors.newFixedThreadPool(settings.maxConcurrentDownloads);
+
 
         started = true;
     }
@@ -494,10 +506,9 @@ public class DefaultDownloadService extends Service {
     public void pauseDownload(final DefaultDownloadItem item) {
         assertStarted();
 
-        ArrayList<DownloadTask> downloadTasks;
         if (item != null) {
-            downloadTasks = database.readPendingDownloadTasksFromDB(item.getItemId());
-            if (downloadTasks.size() > 0) {
+            int countPendingFiles = database.countPendingFiles(item.getItemId());
+            if (countPendingFiles > 0) {
 
                 pauseItemDownload(item.getItemId());
 
