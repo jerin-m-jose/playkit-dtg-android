@@ -81,10 +81,10 @@ public class DefaultDownloadService extends Service {
 
         boolean itemInMap = inProgressDownloadItemInfoMap.containsKey(itemId);
         if (!itemInMap) {
-            throw new IllegalStateException("Service not started correvtly inProgressDownloadItemInfoMap missing item " + itemId);
+            throw new IllegalStateException("Service not started correctly inProgressDownloadItemInfoMap missing item " + itemId);
         }
-        boolean defaultDtgItemExistInMap = inProgressDownloadItemInfoMap.get(itemId).getDefaultDownloadItem() != null;
-        final DefaultDownloadItem item   = inProgressDownloadItemInfoMap.get(itemId).getDefaultDownloadItem();
+
+        final DefaultDownloadItem item = inProgressDownloadItemInfoMap.get(itemId).getDefaultDownloadItem();
 
         if (item == null) {
             Log.e(TAG, "Can't find item by id: " + itemId + " taskId: " + task.taskId);
@@ -154,7 +154,7 @@ public class DefaultDownloadService extends Service {
                 @Override
                 public void run() {
                     if (shouldSendProgress) {
-                        Log.i(TAG, "Pending tasks Sending progress");
+                        //Log.i(TAG, "Pending tasks Sending progress");
                         downloadStateListener.onProgressChange(item, totalBytes);
                     }
                 }
@@ -442,7 +442,7 @@ public class DefaultDownloadService extends Service {
 
     }
 
-    public DownloadState startDownload(final String itemId) {
+    public synchronized DownloadState startDownload(final String itemId) {
         assertStarted();
         if (TextUtils.isEmpty(itemId)) {
             throw new IllegalStateException("Can't download empty itemId");
@@ -491,7 +491,7 @@ public class DefaultDownloadService extends Service {
         return item.getState();
     }
 
-    public void pauseDownload(final DefaultDownloadItem item) {
+    public synchronized void pauseDownload(final DefaultDownloadItem item) {
         assertStarted();
 
         ArrayList<DownloadTask> downloadTasks;
@@ -514,7 +514,7 @@ public class DefaultDownloadService extends Service {
         }
     }
 
-    public void resumeDownload(DefaultDownloadItem item) {
+    public synchronized void resumeDownload(DefaultDownloadItem item) {
         assertStarted();
 
         // resume should be considered as download start
