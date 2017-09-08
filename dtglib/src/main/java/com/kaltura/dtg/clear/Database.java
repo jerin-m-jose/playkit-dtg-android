@@ -246,7 +246,7 @@ class Database {
                 values.put(COL_FILE_COMPLETE, 1);
                 
                 db.updateWithOnConflict(TBL_DOWNLOAD_FILES, values, COL_TARGET_FILE + "==?",
-                        new String[]{downloadTask.targetFile.getAbsolutePath()},
+                        new String[]{ downloadTask.targetFile.getAbsolutePath() },
                         SQLiteDatabase.CONFLICT_IGNORE);
                 return true;
             }

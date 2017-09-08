@@ -87,21 +87,20 @@ public class DefaultDownloadService extends Service {
         final DefaultDownloadItem item   = inProgressDownloadItemInfoMap.get(itemId).getDefaultDownloadItem();
 
         if (item == null) {
-            Log.e(TAG, "Can't find item by id: " + itemId + "; taskId: " + task.taskId);
+            Log.e(TAG, "Can't find item by id: " + itemId + " taskId: " + task.taskId);
             throw new IllegalStateException("No Item fonud for itemId = " + itemId);
         }
 
         InProgressDownloadItemInfo currInProgressDownloadItemInfo = inProgressDownloadItemInfoMap.get(itemId);
 
         int pendingCount = -1;
+
         if (newState == DownloadTask.State.COMPLETED) {
             //database.markTaskAsComplete(task);
             currInProgressDownloadItemInfo.addCompletedTaskIdToList(task.taskId);
             pendingCount = currInProgressDownloadItemInfo.getPendingCount();;
             Log.i(TAG, "Pending tasks for item: " +itemId + " = " + pendingCount);
-        }
-
-        if (newState == DownloadTask.State.ERROR) {
+        } else if (newState == DownloadTask.State.ERROR) {
             Log.d(TAG, "Task has failed: cancelling item " + itemId);
             if (stopError != null && stopError.getMessage() != null) {
                 Log.d(TAG, "Task has failed with error: " + stopError.getMessage());
@@ -119,14 +118,23 @@ public class DefaultDownloadService extends Service {
             return;
         }
 
+        if (item.getState() == DownloadState.FAILED && newState == DownloadTask.State.IN_PROGRESS) {
+            item.setState(DownloadState.IN_PROGRESS);
+            database.updateItemState(itemId, DownloadState.IN_PROGRESS);
+        }
+
         //need to update Item with new value
         final long totalBytes = item.incDownloadBytes(newBytes);
         //Log.i(TAG, "Pending tasks totalBytes: " + totalBytes);
 
         //final long totalBytes = currInProgressDownloadItemInfo.getTotalBytes() + newBytes;
         currInProgressDownloadItemInfo.setTotalBytes(totalBytes);
-        //updateItemInfoInDB(item, Database.COL_ITEM_DOWNLOADED_SIZE);
 
+
+        final boolean shouldSendProgress = currInProgressDownloadItemInfo.shouldSendProgressUpdate();
+        if (shouldSendProgress) {
+            updateItemInfoInDB(item, Database.COL_ITEM_DOWNLOADED_SIZE);
+        }
         if (pendingCount == 0) {
             // We finished the last (or only) chunk of the item.
             database.setDownloadFinishTime(itemId);
@@ -145,7 +153,10 @@ public class DefaultDownloadService extends Service {
             listenerHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    downloadStateListener.onProgressChange(item, totalBytes);
+                    if (shouldSendProgress) {
+                        Log.i(TAG, "Pending tasks Sending progress");
+                        downloadStateListener.onProgressChange(item, totalBytes);
+                    }
                 }
             });
         }
